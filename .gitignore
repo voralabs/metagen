@@ -13,5 +13,3 @@ build/
 catalog/
 *.log
 .DS_Store
-claude_code_docs/
-.claude/
