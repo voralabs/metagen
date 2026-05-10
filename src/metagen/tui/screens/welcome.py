@@ -13,6 +13,12 @@ from metagen.tui.screens.base import WizardScreen
 
 EXAMPLES_DIR = Path(__file__).resolve().parents[4] / "examples" / "ecommerce"
 
+LOGO = r"""╭─ ● ● ● ─────────────╮
+│   0 1 0 1 0         │
+│     1 0 1 0 1       │
+│   0 1 0 1 0         │
+╰─────────────────────╯"""
+
 
 class WelcomeScreen(WizardScreen):
     title = "metagen"
@@ -20,6 +26,7 @@ class WelcomeScreen(WizardScreen):
     show_back = False
 
     def compose_body(self) -> ComposeResult:
+        yield Static(LOGO, id="welcome-logo")
         yield Static(f"v{__version__}", classes="dim")
         yield Static("")
         yield Static(

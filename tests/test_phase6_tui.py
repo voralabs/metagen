@@ -22,7 +22,7 @@ from metagen.tui.screens.welcome import WelcomeScreen
 @pytest.mark.asyncio
 async def test_full_wizard_via_sample_button(tmp_path):
     app = MetagenApp()
-    async with app.run_test() as pilot:
+    async with app.run_test(size=(100, 40)) as pilot:
         # Welcome — click "Try sample data" to skip the Source screen.
         assert isinstance(app.screen, WelcomeScreen)
         await pilot.click("#welcome-sample")
