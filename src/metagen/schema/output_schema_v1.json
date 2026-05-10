@@ -1,0 +1,151 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/meta-gen/metagen/schema/output_schema_v1.json",
+  "title": "metagen output schema",
+  "type": "object",
+  "required": ["schema_version", "generated_at", "generator", "source", "tables"],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "generated_at": { "type": "string", "format": "date-time" },
+    "generator": {
+      "type": "object",
+      "required": ["name", "version"],
+      "properties": {
+        "name": { "type": "string" },
+        "version": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "source": {
+      "type": "object",
+      "required": ["type"],
+      "properties": {
+        "type": { "enum": ["files", "database"] },
+        "paths": { "type": "array", "items": { "type": "string" } },
+        "connection_label": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    },
+    "tables": { "type": "array", "items": { "$ref": "#/$defs/TableProfile" } },
+    "relationships": { "type": "array", "items": { "$ref": "#/$defs/Relationship" } },
+    "user_context": { "$ref": "#/$defs/UserContext" }
+  },
+  "additionalProperties": false,
+  "$defs": {
+    "Source": { "enum": ["computed", "llm", "user"] },
+    "TaggedText": {
+      "type": "object",
+      "required": ["text", "source"],
+      "properties": {
+        "text": { "type": "string" },
+        "source": { "$ref": "#/$defs/Source" },
+        "confidence": { "type": ["number", "null"], "minimum": 0, "maximum": 1 }
+      },
+      "additionalProperties": false
+    },
+    "TaggedValue": {
+      "type": "object",
+      "required": ["value", "source"],
+      "properties": {
+        "value": {},
+        "source": { "$ref": "#/$defs/Source" },
+        "confidence": { "type": ["number", "null"], "minimum": 0, "maximum": 1 }
+      },
+      "additionalProperties": false
+    },
+    "ColumnStats": {
+      "type": "object",
+      "properties": {
+        "null_count": { "type": "integer", "minimum": 0 },
+        "null_fraction": { "type": "number", "minimum": 0, "maximum": 1 },
+        "distinct_count": { "type": ["integer", "null"], "minimum": 0 },
+        "distinct_fraction": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "min": {},
+        "max": {},
+        "mean": { "type": ["number", "null"] },
+        "stddev": { "type": ["number", "null"] },
+        "top_values": { "type": "array", "items": { "type": "object" } },
+        "histogram": { "type": ["array", "null"], "items": { "type": "object" } }
+      },
+      "additionalProperties": false
+    },
+    "ValidationFlag": {
+      "type": "object",
+      "required": ["code", "message"],
+      "properties": {
+        "code": { "type": "string" },
+        "message": { "type": "string" },
+        "severity": { "enum": ["info", "warning", "error"] }
+      },
+      "additionalProperties": false
+    },
+    "ColumnProfile": {
+      "type": "object",
+      "required": ["name", "dtype", "stats"],
+      "properties": {
+        "name": { "type": "string" },
+        "dtype": { "type": "string" },
+        "semantic_type": { "anyOf": [{ "$ref": "#/$defs/TaggedValue" }, { "type": "null" }] },
+        "description": { "anyOf": [{ "$ref": "#/$defs/TaggedText" }, { "type": "null" }] },
+        "stats": { "$ref": "#/$defs/ColumnStats" },
+        "validation_flags": { "type": "array", "items": { "$ref": "#/$defs/ValidationFlag" } }
+      },
+      "additionalProperties": false
+    },
+    "QualityIssue": {
+      "type": "object",
+      "required": ["code", "message"],
+      "properties": {
+        "column": { "type": ["string", "null"] },
+        "code": { "type": "string" },
+        "message": { "type": "string" }
+      },
+      "additionalProperties": false
+    },
+    "TableQuality": {
+      "type": "object",
+      "properties": {
+        "grade": { "enum": ["A", "B", "C", "D", "F", null] },
+        "completeness": { "type": ["number", "null"], "minimum": 0, "maximum": 1 },
+        "issues": { "type": "array", "items": { "$ref": "#/$defs/QualityIssue" } }
+      },
+      "additionalProperties": false
+    },
+    "TableProfile": {
+      "type": "object",
+      "required": ["name", "row_count", "columns"],
+      "properties": {
+        "name": { "type": "string" },
+        "row_count": { "type": "integer", "minimum": 0 },
+        "description": { "anyOf": [{ "$ref": "#/$defs/TaggedText" }, { "type": "null" }] },
+        "columns": { "type": "array", "items": { "$ref": "#/$defs/ColumnProfile" } },
+        "quality": { "anyOf": [{ "$ref": "#/$defs/TableQuality" }, { "type": "null" }] },
+        "natural_key": { "anyOf": [{ "type": "array", "items": { "type": "string" } }, { "type": "null" }] },
+        "grain": { "anyOf": [{ "$ref": "#/$defs/TaggedText" }, { "type": "null" }] }
+      },
+      "additionalProperties": false
+    },
+    "Relationship": {
+      "type": "object",
+      "required": ["table_a", "columns_a", "table_b", "columns_b", "cardinality", "confidence", "source"],
+      "properties": {
+        "table_a": { "type": "string" },
+        "columns_a": { "type": "array", "items": { "type": "string" } },
+        "table_b": { "type": "string" },
+        "columns_b": { "type": "array", "items": { "type": "string" } },
+        "cardinality": { "enum": ["one-to-one", "one-to-many", "many-to-one", "many-to-many"] },
+        "confidence": { "type": "number", "minimum": 0, "maximum": 1 },
+        "source": { "$ref": "#/$defs/Source" }
+      },
+      "additionalProperties": false
+    },
+    "UserContext": {
+      "type": "object",
+      "properties": {
+        "glossary": { "type": "object", "additionalProperties": { "type": "string" } },
+        "notes": { "type": ["string", "null"] }
+      },
+      "additionalProperties": false
+    }
+  }
+}
